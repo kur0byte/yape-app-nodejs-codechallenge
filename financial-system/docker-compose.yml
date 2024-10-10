@@ -28,9 +28,17 @@ services:
       - zookeeper_log:/var/lib/zookeeper/log
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "echo", "ruok", "|", "nc", "localhost", "2201", "|", "grep", "imok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   kafka:
     image: confluentinc/cp-enterprise-kafka:latest.arm64
+    depends_on:
+      zookeeper:
+        condition: service_healthy
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2201
@@ -56,9 +64,12 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - kafka
-      - postgres
-      - redis
+      kafka: 
+        condition: service_healthy
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
     environment:
       TRANSACTION_SERVICE_URL: http://transaction-service:3001
       ANTI_FRAUD_SERVICE_URL: http://anti-fraud-service:3002
@@ -69,8 +80,12 @@ services:
   transaction-service:
     build: ./transaction-service
     depends_on:
-      - postgres
-      - redis
+      kafka: 
+        condition: service_healthy
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
     ports:
       - "3001:3001"
     environment:
@@ -97,11 +112,31 @@ services:
   status-update-service:
     build: ./status-update-service
     depends_on:
-      - kafka
-      - postgres
-      - redis
+      kafka: 
+        condition: service_healthy
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
     environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: testuser
+      DB_PASSWORD: adminPassword
+      DB_NAME: financial_system
       KAFKA_BROKER: kafka:29092
+    networks:
+      - app-network
+      
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
     networks:
       - app-network
 
