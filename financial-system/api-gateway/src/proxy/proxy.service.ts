@@ -12,9 +12,12 @@ export class ProxyService {
 
   private setupProxies() {
     const services = [
-      { path: '/api/transactions', target: 'http://localhost:3001/transactions' },
-      { path: '/api/anti-fraud', target: 'http://localhost:3002/anti-fraud' },
-      { path: '/api/status', target: 'http://localhost:3003/status' },
+      // { path: '/api/transactions', target: 'http://localhost:3001/transactions' },
+      // { path: '/api/anti-fraud', target: 'http://localhost:3002/anti-fraud' },
+      // { path: '/api/status', target: 'http://localhost:3003/status' },
+      { path: '/api/transactions', target: 'http://transaction-service:3001/transactions' },
+      { path: '/api/anti-fraud', target: 'http://anti-fraud-service:3002/anti-fraud' },
+      { path: '/api/status', target: 'http://status-update-service:3003/status' },
     ];
 
     services.forEach(({ path, target }) => {
