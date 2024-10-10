@@ -8,8 +8,6 @@ export class StatusUpdateController {
 
   @EventPattern('transaction_status_updated')
   async handleTransactionCreated(@Payload() message: any) {
-    console.log('Received transaction status update:', message);
-    // await this.statusUpdateService.processTransaction(message);
-    // console.log('Transaction processed');
+    await this.statusUpdateService.processTransaction(message);
   }
 }
