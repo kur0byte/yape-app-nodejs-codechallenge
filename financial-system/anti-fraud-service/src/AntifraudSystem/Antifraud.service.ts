@@ -40,12 +40,10 @@ export class AntiFraudService implements OnModuleInit {
       status: status,
     };
 
-    this.kafkaClient.emit('transaction_status_updated', JSON.stringify(result));
+    this.kafkaClient.emit('transaction_status_updated', JSON.stringify(result))
   }
 
   private detectFraud(transaction: any): boolean {
-    // Implement your fraud detection logic here
-    // For now, we'll use a simple rule: reject transactions over 1000
-    return transaction.value > 1000;
+    return transaction > 1000;
   }
 }

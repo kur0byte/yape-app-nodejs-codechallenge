@@ -6,6 +6,11 @@ import { AntiFraudService } from './Antifraud.service';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ 
+      isGlobal: true,
+      envFilePath: ['.env'],
+    }),
+    
     ClientsModule.registerAsync([
       {
         name: 'KAFKA_SERVICE',
@@ -14,27 +19,28 @@ import { AntiFraudService } from './Antifraud.service';
           transport: Transport.KAFKA,
           options: {
             client: {
-              clientId: 'anti-fraud',
+              clientId: 'antifraud-service',
               brokers: [configService.get<string>('KAFKA_BROKER')],
               retry: {
-                initialRetryTime: 100,
-                retries: 8
+                initialRetryTime: 300,
+                retries: 12
               },
             },
             consumer: {
-              groupId: 'anti-fraud-consumer',
+              groupId: 'antifraud',
+              allowAutoTopicCreation: true,
             },
             producer: {
               retry: {
-                initialRetryTime: 100,
-                retries: 8
+                initialRetryTime: 300,
+                retries: 12
               }
             }
           },
         }),
         inject: [ConfigService],
       },
-    ]),
+    ])
   ],
   controllers: [AntiFraudController],
   providers: [AntiFraudService],
