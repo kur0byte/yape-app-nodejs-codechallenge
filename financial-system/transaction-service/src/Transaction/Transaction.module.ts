@@ -17,13 +17,16 @@ import { Transaction } from './Transaction.entity';
           transport: Transport.KAFKA,
           options: {
             client: {
-              clientId: 'transaction',
+              clientId: 'transaction-client',
               brokers: [configService.get<string>('KAFKA_BROKER')],
             },
-            consumer: {
-              groupId: 'transaction-consumer',
+            producer: {
+              allowAutoTopicCreation: true,
             },
-          },
+            consumer: {
+              groupId: 'transaction',
+            },
+          }
         }),
         inject: [ConfigService],
       },
