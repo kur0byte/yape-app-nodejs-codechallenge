@@ -1,5 +1,5 @@
 import { Controller } from '@nestjs/common';
-import { MessagePattern, Payload } from '@nestjs/microservices';
+import { EventPattern, MessagePattern,Payload } from '@nestjs/microservices';
 import { AntiFraudService } from './Antifraud.service';
 
 @Controller()
@@ -8,7 +8,12 @@ export class AntiFraudController {
 
   @MessagePattern('transaction_created')
   async handleTransactionCreated(@Payload() message: any) {
-    const transaction = JSON.parse(message.value);
-    await this.antiFraudService.processTransaction(transaction);
+    try {
+      console.log('Received transaction:', message);
+      await this.antiFraudService.processTransaction(message);
+      console.log('Transaction processed');
+    } catch (error) {
+      console.error('Failed to process transaction:', error);
+    }
   }
 }
