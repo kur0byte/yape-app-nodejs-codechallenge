@@ -44,6 +44,6 @@ export class AntiFraudService implements OnModuleInit {
   }
 
   private detectFraud(transaction: any): boolean {
-    return transaction > 1000;
+    return transaction.value > 1000;
   }
 }
