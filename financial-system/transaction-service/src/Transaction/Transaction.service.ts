@@ -24,7 +24,7 @@ export class TransactionService {
     await this.transactionRepository.save(transaction);
 
     this.kafkaClient.emit('transaction_created', JSON.stringify(transaction));
-
+    console.log('Transaction created:', transaction);
     return transaction;
   }
 
