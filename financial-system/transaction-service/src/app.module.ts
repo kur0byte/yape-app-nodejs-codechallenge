@@ -26,5 +26,6 @@ import { TransactionModule } from "./Transaction/Transaction.module";
     }),
     TransactionModule,
   ],
+  exports: [ConfigModule, TypeOrmModule],
 })
 export class AppModule {}
