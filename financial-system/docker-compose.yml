@@ -9,21 +9,28 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/run/postgresql/data
+    networks:
+      - app-network
 
   redis:
     image: redis:6
     ports:
       - "6379:6379"
+    networks:
+      - app-network
 
   zookeeper:
-    image: confluentinc/cp-zookeeper:5.5.3
+    image: confluentinc/cp-zookeeper:latest.arm64
     environment:
       ZOOKEEPER_CLIENT_PORT: 2201
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+      - zookeeper_log:/var/lib/zookeeper/log
+    networks:
+      - app-network
 
   kafka:
-    image: confluentinc/cp-enterprise-kafka:5.5.3
-    depends_on:
-      - zookeeper
+    image: confluentinc/cp-enterprise-kafka:latest.arm64
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2201
@@ -31,11 +38,18 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CONFLUENT_LICENSE: "your-license-key" # Optional for enterprise features
+    ports:
+      - "9092:9092"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
     healthcheck:
-      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list"]
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server kafka:9092 --list"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - app-network
 
   api-gateway:
     build: ./api-gateway
@@ -45,11 +59,18 @@ services:
       - kafka
       - postgres
       - redis
+    environment:
+      TRANSACTION_SERVICE_URL: http://transaction-service:3001
+      ANTI_FRAUD_SERVICE_URL: http://anti-fraud-service:3002
+      STATUS_UPDATE_SERVICE_URL: http://status-update-service:3003
+    networks:
+      - app-network
 
   transaction-service:
     build: ./transaction-service
     depends_on:
       - postgres
+      - redis
     ports:
       - "3001:3001"
     environment:
@@ -59,6 +80,9 @@ services:
       DB_PASSWORD: adminPassword
       DB_NAME: financial_system
       DB_SYNCHRONIZE: "true"
+      KAFKA_BROKER: kafka:29092
+    networks:
+      - app-network
 
   anti-fraud-service:
     build: ./anti-fraud-service
@@ -67,6 +91,8 @@ services:
         condition: service_healthy
     environment:
       KAFKA_BROKER: kafka:29092
+    networks:
+      - app-network
 
   status-update-service:
     build: ./status-update-service
@@ -74,6 +100,17 @@ services:
       - kafka
       - postgres
       - redis
+    environment:
+      KAFKA_BROKER: kafka:29092
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
 
 volumes:
   postgres_data:
+  zookeeper_data:
+  zookeeper_log:
+  kafka_data:
