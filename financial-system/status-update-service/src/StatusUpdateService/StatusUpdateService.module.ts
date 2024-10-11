@@ -4,10 +4,10 @@ import { StatusUpdateController } from './StatusUpdate.controller';
 import { StatusUpdateService } from './StatusUpdateService.service';
 import { Transaction } from './Transaction.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Module } from '@nestjs/common';
-import { CacheModule} from '@nestjs/cache-manager';
-import { redisStore } from 'cache-manager-redis-store';
+import { Logger, Module } from '@nestjs/common';
+import { CacheModule, CacheModuleOptions } from '@nestjs/cache-manager';
 import { RedisClientOptions } from 'redis';
+import * as redisStore from 'cache-manager-redis-store';
 
 @Module({
   imports: [
@@ -42,14 +42,21 @@ import { RedisClientOptions } from 'redis';
         inject: [ConfigService],
       },
     ]),
-    CacheModule.register([
-      {
-        store: redisStore,
-        host: 'localhost',
-        port: 6379,
-        ttl: 500,
-      }
-    ])
+    CacheModule.register<CacheModuleOptions>({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => {
+        const redisHost = '127.0.0.1';
+        const redisPort = configService.get<number>('REDIS_PORT');
+        Logger.log(`Connecting to Redis at ${redisHost}:${redisPort}`);
+        return {
+          url: `redis://${redisHost}:${redisPort}`,
+          store: redisStore,
+          ttl: 300,
+          global: true,
+        };
+      },
+      inject: [ConfigService],
+    }),
   ],
   controllers: [StatusUpdateController],
   providers: [StatusUpdateService],
