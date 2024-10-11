@@ -13,11 +13,16 @@ services:
       - app-network
 
   redis:
-    image: redis:6
+    image: redis:latest
     ports:
       - "6379:6379"
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest.arm64
@@ -69,7 +74,7 @@ services:
       postgres:
         condition: service_started
       redis:
-        condition: service_started
+        condition: service_healthy
     environment:
       TRANSACTION_SERVICE_URL: http://transaction-service:3001
       ANTI_FRAUD_SERVICE_URL: http://anti-fraud-service:3002
@@ -79,13 +84,15 @@ services:
 
   transaction-service:
     build: ./transaction-service
+    links:
+      - redis
     depends_on:
       kafka: 
         condition: service_healthy
       postgres:
         condition: service_started
       redis:
-        condition: service_started
+        condition: service_healthy
     ports:
       - "3001:3001"
     environment:
@@ -96,6 +103,8 @@ services:
       DB_NAME: financial_system
       DB_SYNCHRONIZE: "true"
       KAFKA_BROKER: kafka:29092
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     networks:
       - app-network
 
@@ -117,7 +126,7 @@ services:
       postgres:
         condition: service_started
       redis:
-        condition: service_started
+        condition: service_healthy
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
@@ -125,6 +134,8 @@ services:
       DB_PASSWORD: adminPassword
       DB_NAME: financial_system
       KAFKA_BROKER: kafka:29092
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     networks:
       - app-network
 
