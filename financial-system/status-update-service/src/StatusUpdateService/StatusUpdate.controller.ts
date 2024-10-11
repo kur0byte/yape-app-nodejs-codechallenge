@@ -8,6 +8,6 @@ export class StatusUpdateController {
 
   @EventPattern('transaction_status_updated')
   async handleTransactionCreated(@Payload() message: any) {
-    await this.statusUpdateService.processTransaction(message);
+    await this.statusUpdateService.handleStatusUpdate(message);
   }
 }

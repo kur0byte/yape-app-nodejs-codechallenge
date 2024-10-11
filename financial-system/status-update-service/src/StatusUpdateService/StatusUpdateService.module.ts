@@ -1,10 +1,13 @@
-import { ClientsModule, KafkaOptions, Transport } from '@nestjs/microservices';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { StatusUpdateController } from './StatusUpdate.controller';
 import { StatusUpdateService } from './StatusUpdateService.service';
 import { Transaction } from './Transaction.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Module } from '@nestjs/common';
+import { CacheModule} from '@nestjs/cache-manager';
+import { redisStore } from 'cache-manager-redis-store';
+import { RedisClientOptions } from 'redis';
 
 @Module({
   imports: [
@@ -12,6 +15,7 @@ import { Module } from '@nestjs/common';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    TypeOrmModule.forFeature([Transaction]),
     ClientsModule.registerAsync([
       {
         name: 'KAFKA_SERVICE',
@@ -38,21 +42,14 @@ import { Module } from '@nestjs/common';
         inject: [ConfigService],
       },
     ]),
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.get<string>('DB_HOST'),
-        port: configService.get<number>('DB_PORT'),
-        username: configService.get<string>('DB_USERNAME'),
-        password: configService.get<string>('DB_PASSWORD'),
-        database: configService.get<string>('DB_NAME'),
-        entities: [Transaction],
-        // synchronize: configService.get<boolean>('DB_SYNCHRONIZE'),
-      }),
-      inject: [ConfigService],
-    }),
-    TypeOrmModule.forFeature([Transaction]),
+    CacheModule.register([
+      {
+        store: redisStore,
+        host: 'localhost',
+        port: 6379,
+        ttl: 500,
+      }
+    ])
   ],
   controllers: [StatusUpdateController],
   providers: [StatusUpdateService],

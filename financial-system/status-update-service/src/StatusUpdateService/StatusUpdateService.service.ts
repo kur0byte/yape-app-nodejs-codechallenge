@@ -3,13 +3,15 @@ import { ClientKafka } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Transaction } from './Transaction.entity'; // Ensure correct import path
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class StatusUpdateService implements OnModuleInit {
   constructor(
     @Inject('KAFKA_SERVICE') private kafkaClient: ClientKafka,
     @InjectRepository(Transaction) private transactionRepository: Repository<Transaction>,
-    // @Inject(CACHE_MANAGER) private cacheManager: Cache
+    @Inject(CACHE_MANAGER) private cacheManager: Cache
   ) {}
 
   async onModuleInit() {
@@ -37,30 +39,19 @@ export class StatusUpdateService implements OnModuleInit {
     }
   }
 
-  async updateStatus(transactionId: string, status: string): Promise<void> {
-    await this.kafkaClient.emit('transaction-status-updated', { transactionId, status });
-    // await this.cacheManager.set(`status:${transactionId}`, status, 60000); // Cache for 1 minute
-  }
-
-  async processTransaction(data: any): Promise<void> {
+  async handleStatusUpdate(data: any): Promise<void> {
     console.log('Received transaction status update:', data);
     const { transactionExternalId, status} = data;
+    if (!transactionExternalId || !status) {
+      console.error('Invalid message received');
+      return;
+    }
+    if (status !== 'approved' && status !== 'rejected') {
+      console.error('Invalid status received');
+      return;
+    }
     await this.transactionRepository.update({ externalId: transactionExternalId }, { status });
+    await this.cacheManager.del(transactionExternalId);
     console.log('Transaction status updated');
-    // await this.cacheManager.set(`status:${transactionId}`, status, 60000);
-    // this.kafkaClient.emit('transaction_status_updated', JSON.stringify(result))
   }
-  
-  // async getStatus(transactionId: string): Promise<string | undefined> {
-  //   const cachedStatus = await this.cacheManager.get<string>(`status:${transactionId}`);
-  //   if (cachedStatus) {
-  //     return cachedStatus;
-  //   }
-  //   const transaction = await this.transactionRepository.findOne({ where: { id: transactionId }, select: ['status'] });
-  //   if (transaction) {
-  //     await this.cacheManager.set(`status:${transactionId}`, transaction.status, 60000);
-  //     return transaction.status;
-  //   }
-  //   return undefined;
-  // }
 }
