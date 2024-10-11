@@ -127,7 +127,7 @@ services:
       KAFKA_BROKER: kafka:29092
     networks:
       - app-network
-      
+
   pgadmin:
     image: dpage/pgadmin4:latest
     environment:
