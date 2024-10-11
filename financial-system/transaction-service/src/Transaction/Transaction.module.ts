@@ -5,9 +5,16 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TransactionController } from './Transaction.controller';
 import { TransactionService } from './Transaction.service';
 import { Transaction } from './Transaction.entity';
+import { CacheModule } from '@nestjs/cache-manager';
+import { redisStore } from 'cache-manager-redis-store';
+import { RedisClientOptions } from 'redis';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
     TypeOrmModule.forFeature([Transaction]),
     ClientsModule.registerAsync([
       {
@@ -31,6 +38,12 @@ import { Transaction } from './Transaction.entity';
         inject: [ConfigService],
       },
     ]),
+    CacheModule.register<RedisClientOptions>({
+      store: redisStore,
+      host: 'localhost',
+      port: 6379,
+      ttl: 300,
+    }),
   ],
   controllers: [TransactionController],
   providers: [TransactionService],
