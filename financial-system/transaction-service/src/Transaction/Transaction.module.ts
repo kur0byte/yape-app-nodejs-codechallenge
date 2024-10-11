@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, Logger } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -6,7 +6,7 @@ import { TransactionController } from './Transaction.controller';
 import { TransactionService } from './Transaction.service';
 import { Transaction } from './Transaction.entity';
 import { CacheModule } from '@nestjs/cache-manager';
-import { redisStore } from 'cache-manager-redis-store';
+import * as redisStore from 'cache-manager-redis-store';
 import { RedisClientOptions } from 'redis';
 
 @Module({
@@ -39,10 +39,19 @@ import { RedisClientOptions } from 'redis';
       },
     ]),
     CacheModule.register<RedisClientOptions>({
-      store: redisStore,
-      host: 'localhost',
-      port: 6379,
-      ttl: 300,
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => {
+        const redisHost = '127.0.0.1';
+        const redisPort = configService.get<number>('REDIS_PORT');
+        Logger.log(`Connecting to Redis at ${redisHost}:${redisPort}`);
+        return {
+          url: `redis://${redisHost}:${redisPort}`,
+          store: redisStore,
+          ttl: 300,
+          global: true,
+        };
+      },
+      inject: [ConfigService],
     }),
   ],
   controllers: [TransactionController],
