@@ -144,24 +144,23 @@ Expiration: 5 minutes
 - **Request Body**:
   ```json
   {
-    "accountExternalIdDebit": "Guid",
-    "accountExternalIdCredit": "Guid",
-    "tranferTypeId": 1,
-    "value": 120
+    "accountExternalIdDebit": "24e97bac-d03c-4646-9905-c40b26ccc1ad",
+    "accountExternalIdCredit": "24e97bac-d03c-4646-9905-c40b26ccc1ad",
+    "tranferTypeId": 123,
+    "value": 213
   }
   ```
 - **Response**:
   ```json
   {
-    "transactionExternalId": "Guid",
-    "transactionType": {
-      "name": "Transfer"
-    },
-    "transactionStatus": {
-      "name": "pending"
-    },
-    "value": 120,
-    "createdAt": "Date"
+    "externalId": "4e3e183d-6380-4add-ad8e-d88c6f5aa392",
+    "accountExternalIdDebit": "24e97bac-d03c-4646-9905-c40b26ccc1ad",
+    "accountExternalIdCredit": "24e97bac-d03c-4646-9905-c40b26ccc1ad",
+    "tranferTypeId": 123,
+    "value": 213,
+    "status": "pending",
+    "id": 49,
+    "createdAt": "2024-10-12T21:45:30.512Z"
   }
   ```
 
@@ -171,11 +170,14 @@ Expiration: 5 minutes
 - **Response**:
   ```json
   {
-    "transactionExternalId": "Guid",
-    "transactionType": "Transfer",
-    "transactionStatus": "approved",
-    "value": 120,
-    "createdAt": "Date"
+    "id": 48,
+    "externalId": "2a8dcd80-fb9e-4f64-a866-f931f2d4a804",
+    "accountExternalIdDebit": "24e97bac-d03c-4646-9905-c40b26ccc1ad",
+    "accountExternalIdCredit": "24e97bac-d03c-4646-9905-c40b26ccc1ad",
+    "tranferTypeId": 123,
+    "value": "213.00",
+    "status": "approved",
+    "createdAt": "2024-10-12T21:43:25.657Z"
   }
   ```
 
