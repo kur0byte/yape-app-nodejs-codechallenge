@@ -2,8 +2,6 @@
 
 This project implements a scalable financial transaction system for Yape, designed to handle high-volume scenarios with real-time processing and fraud detection.
 
-## Table of Contents
-
 1. [Project Structure](#project-structure)
 2. [Prerequisites](#prerequisites)
 3. [Getting Started](#getting-started)
