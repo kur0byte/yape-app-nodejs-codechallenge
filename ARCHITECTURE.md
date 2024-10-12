@@ -194,7 +194,6 @@ Expiration: 5 minutes
 
 ### 8.1 Unit Tests
 - Write unit tests for individual components and functions using Jest.
-- Aim for high test coverage, especially for critical business logic.
 
 ### 8.2 Integration Tests
 - Implement integration tests to verify the interaction between different services.
