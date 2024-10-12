@@ -203,9 +203,3 @@ Expiration: 5 minutes
 ### 9.1 Containerization
 - Use Docker to containerize each microservice and its dependencies.
 - Create a docker-compose.yml file for local development and testing.
-
-## 10. Conclusion
-
-This financial transaction system is designed to meet the requirements of the Yape Code Challenge while addressing scalability and performance concerns. By leveraging microservices architecture, event-driven communication, and various optimization techniques, the system is well-equipped to handle high-volume scenarios and provide a robust platform for financial transactions.
-
-The implementation follows best practices in software development, including modular design, comprehensive testing, and a well-defined deployment strategy. This ensures that the system is not only functional but also maintainable and extensible for future enhancements.
