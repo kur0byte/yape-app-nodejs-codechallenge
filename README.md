@@ -60,7 +60,7 @@ To initialize and run the project using Docker Compose, follow these steps:
 1. Clone the repository:
    ```
    git clone https://github.com/your-username/yape-financial-system.git
-   cd yape-financial-system
+   cd financial-system
    ```
 
 2. Start the services using Docker Compose:
