@@ -1,5 +1,5 @@
 # Yape Code Challenge: Financial Transaction System
-![architecture_diagram](https://github.com/kur0byte/yape-app-nodejs-codechallenge/blob/develop/docs/transaction_architecture_diagram.png)
+![architecture_diagram](https://github.com/kur0byte/yape-app-nodejs-codechallenge/blob/main/transaction_architecture_diagram.png)
 
 1. [Introduction](#introduction)
 2. [System Overview](#system-overview)
