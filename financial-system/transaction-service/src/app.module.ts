@@ -14,13 +14,28 @@ import { TransactionModule } from "./Transaction/Transaction.module";
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
-        host: configService.get<string>('DB_HOST'),
-        port: configService.get<number>('DB_PORT'),
-        username: configService.get<string>('DB_USERNAME'),
-        password: configService.get<string>('DB_PASSWORD'),
-        database: configService.get<string>('DB_NAME'),
+        replication: {
+          master: {
+            host: configService.get<string>('DB_HOST'),
+            port: configService.get<number>('DB_PORT'),
+            username: configService.get<string>('DB_USERNAME'),
+            password: configService.get<string>('DB_PASSWORD'),
+            database: configService.get<string>('DB_NAME'),
+          },
+          slaves: [{
+            host: configService.get<string>('DB_REPLICA_HOST'),
+            port: configService.get<number>('DB_REPLICA_PORT') || configService.get<number>('DB_PORT'),
+            username: configService.get<string>('DB_USERNAME'),
+            password: configService.get<string>('DB_PASSWORD'),
+            database: configService.get<string>('DB_NAME'),
+          }],
+        },
         entities: [Transaction],
         synchronize: configService.get<boolean>('DB_SYNCHRONIZE'),
+        extra: {
+          max: 100,
+          idleTimeoutMillis: 30000, 
+        },
       }),
       inject: [ConfigService],
     }),
