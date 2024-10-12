@@ -1,10 +1,11 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, Index } from 'typeorm';
 
 @Entity()
 export class Transaction {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Index()
   @Column({ type: 'uuid', unique: true })
   externalId: string;
 

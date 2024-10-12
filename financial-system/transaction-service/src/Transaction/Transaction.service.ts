@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ClientKafka } from '@nestjs/microservices';
@@ -24,19 +24,23 @@ export class TransactionService {
       status: 'pending',
     });
     
-    await this.cacheManager.set(transaction.externalId, transaction);
+    await this.cacheManager.set(`transaction:${transaction.externalId}`, transaction);
     await this.transactionRepository.save(transaction);
     
     this.kafkaClient.emit('transaction_created', JSON.stringify(transaction));
-    console.log('Transaction created:', transaction);
+    Logger.log('Transaction created:', transaction);
     return transaction;
   }
 
   async findOne(id: string): Promise<Transaction> {
-    const cachedTransaction = await this.cacheManager.get<Transaction>(id)
+    const cachedTransaction = await this.cacheManager.get<Transaction>(`transaction:${id}`)
+    
     if (cachedTransaction) {
       return cachedTransaction
     } 
+
+    const results = await this.transactionRepository.createQueryBuilder('transaction');
+
     return await this.transactionRepository.findOne({where: {externalId: id}});
   }
 }

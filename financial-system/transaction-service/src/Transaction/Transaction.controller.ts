@@ -1,24 +1,24 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
-import { TransactionService } from './Transaction.service';
-import { CreateTransactionDto } from './dto/create-transaction.dto';
+  import { Controller, Get, Post, Body, Param, Logger } from '@nestjs/common';
+  import { TransactionService } from './Transaction.service';
+  import { CreateTransactionDto } from './dto/create-transaction.dto';
 
-@Controller('transactions')
-export class TransactionController {
-  constructor(private readonly transactionService: TransactionService) {}
+  @Controller('transactions')
+  export class TransactionController {
+    constructor(private readonly transactionService: TransactionService) {}
 
-  @Post()
-  create(@Body() createTransactionDto: CreateTransactionDto) {
-    return this.transactionService.create(createTransactionDto);
+    @Post()
+    create(@Body() createTransactionDto: CreateTransactionDto) {
+      return this.transactionService.create(createTransactionDto);
+    }
+
+    @Get(':id')
+    findOne(@Param('id') id: string) {
+      return this.transactionService.findOne(id);
+    }
+
+    @Get()
+    find() {
+      Logger.log('Hello from transaction service');
+      return "Hello from transaction service";
+    }
   }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.transactionService.findOne(id);
-  }
-
-  @Get()
-  find() {
-    console.log('Hello from transaction service');
-    return "Hello fronm transaction service";
-  }
-}

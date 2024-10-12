@@ -1,82 +1,129 @@
-# Yape Code Challenge :rocket:
+# Yape Financial Transaction System
 
-Our code challenge will let you marvel us with your Jedi coding skills :smile:. 
+This project implements a scalable financial transaction system for Yape, designed to handle high-volume scenarios with real-time processing and fraud detection.
 
-Don't forget that the proper way to submit your work is to fork the repo and create a PR :wink: ... have fun !!
+1. [Project Structure](#project-structure)
+2. [Prerequisites](#prerequisites)
+3. [Getting Started](#getting-started)
+4. [Services](#services)
+5. [API Endpoints](#api-endpoints)
+6. [Development](#development)
+7. [Testing](#testing)
+8. [Monitoring](#monitoring)
+9. [Troubleshooting](#troubleshooting)
 
-- [Problem](#problem)
-- [Tech Stack](#tech_stack)
-- [Send us your challenge](#send_us_your_challenge)
+## Project Structure
 
-# Problem
+The project is organized into the following main directories:
 
-Every time a financial transaction is created it must be validated by our anti-fraud microservice and then the same service sends a message back to update the transaction status.
-For now, we have only three transaction statuses:
-
-<ol>
-  <li>pending</li>
-  <li>approved</li>
-  <li>rejected</li>  
-</ol>
-
-Every transaction with a value greater than 1000 should be rejected.
-
-```mermaid
-  flowchart LR
-    Transaction -- Save Transaction with pending Status --> transactionDatabase[(Database)]
-    Transaction --Send transaction Created event--> Anti-Fraud
-    Anti-Fraud -- Send transaction Status Approved event--> Transaction
-    Anti-Fraud -- Send transaction Status Rejected event--> Transaction
-    Transaction -- Update transaction Status event--> transactionDatabase[(Database)]
+```
+.
+├── financial-system/
+│   ├── api-gateway
+│   ├── anti-fraud-service
+│   ├── transaction-service
+│   ├── status-update-service
+│   ├── dockerfiles
+│   └── docker-compose.yml
+├── iac/
+│   └── main.tf
+├── ARCHITECTURE.md  ## High-level workflows
+├── README.md        ## Project Initialization
+├── CHALLENGE.md     ## Yape Challenge
+└── build-docker.sh
 ```
 
-# Tech Stack
+- `iac/`: Terraform Infrastructure As Code Experiments
+- `api-gateway/`: NestJS API gateway service
+- `transaction-service/`: NestJS service for creating and retrieving transactions
+- `anti-fraud-service/`: NestJS service for transaction validation
+- `status-update-service/`: NestJS service for updating transaction statuses
+- `dockerfiles`: Docker files for all projects
+- `docker-compose.yml`: Docker Compose configuration for local development
+- `ARCHITECTURE.md`: Detailed system architecture documentation
+- `README.md`: This file
+- `CHALLENGE.md`: Yape challenge description
 
-<ol>
-  <li>Node. You can use any framework you want (i.e. Nestjs with an ORM like TypeOrm or Prisma) </li>
-  <li>Any database</li>
-  <li>Kafka</li>    
-</ol>
+## Prerequisites
 
-We do provide a `Dockerfile` to help you get started with a dev environment.
+Ensure you have the following installed on your system:
 
-You must have two resources:
+- Docker
+- Docker Compose
+- Node.js > 20.x.x (for local development)
+- npm (for local development)
 
-1. Resource to create a transaction that must containt:
+## Getting Started
 
-```json
-{
-  "accountExternalIdDebit": "Guid",
-  "accountExternalIdCredit": "Guid",
-  "tranferTypeId": 1,
-  "value": 120
-}
+To initialize and run the project using Docker Compose, follow these steps:
+
+1. Clone the repository:
+   ```
+   git clone https://github.com/your-username/yape-financial-system.git
+   cd financial-system
+   ```
+
+2. Start the services using Docker Compose:
+   ```
+   docker-compose up -d
+   ```
+
+   This command will build and start all the services defined in the `docker-compose.yml` file, including PostgreSQL, Redis, Kafka, Zookeeper, and the microservices.
+
+3. Wait for all services to be up and running. You can check the status with:
+   ```
+   docker-compose ps
+   ```
+
+4. The API Gateway will be accessible at `http://localhost:3000`.
+
+## Services
+
+- **API Gateway**: Handles incoming API requests (Port 3000)
+- **Transaction Service**: Manages transaction creation and retrieval (Port 3001)
+- **Anti-Fraud Service**: Validates transactions
+- **Status Update Service**: Updates transaction statuses
+- **PostgreSQL**: Primary database (Port 5432)
+- **PostgreSQL Replica**: Read replica for the primary database (Port 5433)
+- **Redis**: Caching layer (Port 6379)
+- **Kafka**: Message broker (Port 9092)
+- **Zookeeper**: Distributed coordination service (Port 2201)
+- **pgAdmin**: Database management tool (Port 5050)
+
+## API Endpoints
+
+- Create Transaction: `POST /api/transactions`
+- Retrieve Transaction: `GET /api/transactions/{transactionExternalId}`
+
+For detailed API documentation, refer to the [API Documentation](#) (link to be added).
+
+## Development
+
+To work on individual services:
+
+1. Navigate to the service directory (e.g., `cd transaction-service`)
+2. Install dependencies: `npm install`
+3. Run the service locally: `npm run start:dev`
+
+Make sure to update the environment variables in the `docker-compose.yml` file if you're running services outside of Docker.
+
+## Testing
+
+Run tests for each service:
+
+```
+cd service-name
+npm run test
 ```
 
-2. Resource to retrieve a transaction
+## Monitoring
 
-```json
-{
-  "transactionExternalId": "Guid",
-  "transactionType": {
-    "name": ""
-  },
-  "transactionStatus": {
-    "name": ""
-  },
-  "value": 120,
-  "createdAt": "Date"
-}
-```
+- Access pgAdmin at `http://localhost:5050` for database monitoring
 
-## Optional
+## Troubleshooting
 
-You can use any approach to store transaction data but you should consider that we may deal with high volume scenarios where we have a huge amount of writes and reads for the same data at the same time. How would you tackle this requirement?
+- If services fail to start, check the logs using `docker-compose logs service-name`
+- Ensure all required ports are free on your system
+- For database connection issues, verify the PostgreSQL connection settings in the service configurations
 
-You can use Graphql;
-
-# Send us your challenge
-
-When you finish your challenge, after forking a repository, you **must** open a pull request to our repository. There are no limitations to the implementation, you can follow the programming paradigm, modularization, and style that you feel is the most appropriate solution.
-
-If you have any questions, please let us know.
+For more detailed information about the system architecture and design decisions, please refer to the [ARCHITECTURE.md](ARCHITECTURE.md) file.

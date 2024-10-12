@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
+import { Logger } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
@@ -20,9 +21,9 @@ async function bootstrap() {
   );
 
   const configService = app.get(ConfigService);
-  console.log(`Connecting to Kafka broker: ${configService.get('KAFKA_BROKER')}`);
+  Logger.log(`Connecting to Kafka broker: ${configService.get('KAFKA_BROKER')}`);
   
   await app.listen();
-  console.log('Status Update microservice is listening');
+  Logger.log('Status Update microservice is listening');
 }
 bootstrap();

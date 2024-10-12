@@ -1,4 +1,4 @@
-import { Injectable, Inject, OnModuleInit, forwardRef } from '@nestjs/common';
+import { Injectable, Inject, OnModuleInit, forwardRef, Logger } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -26,32 +26,32 @@ export class StatusUpdateService implements OnModuleInit {
           await this.kafkaClient.subscribeToResponseOf(topic);
         }
         await this.kafkaClient.connect();
-        console.log('Successfully connected to Kafka');
+        Logger.log('Successfully connected to Kafka');
         return;
       } catch (error) {
-        console.error(`Failed to connect to Kafka (attempt ${attempt}/${maxRetries}):`, error.message);
+        Logger.error(`Failed to connect to Kafka (attempt ${attempt}/${maxRetries}):`, error.message);
         if (attempt === maxRetries) {
-          console.error('Max retries reached. Failing to start the application.');
+          Logger.error('Max retries reached. Failing to start the application.');
           throw error;
         }
-        await new Promise(resolve => setTimeout(resolve, 5000)); // Wait for 5 seconds before retrying
+        await new Promise(resolve => setTimeout(resolve, 5000));
       }
     }
   }
 
   async handleStatusUpdate(data: any): Promise<void> {
-    console.log('Received transaction status update:', data);
+    Logger.log('Received transaction status update:', data);
     const { transactionExternalId, status} = data;
     if (!transactionExternalId || !status) {
-      console.error('Invalid message received');
+      Logger.error('Invalid message received');
       return;
     }
     if (status !== 'approved' && status !== 'rejected') {
-      console.error('Invalid status received');
+      Logger.error('Invalid status received');
       return;
     }
     await this.transactionRepository.update({ externalId: transactionExternalId }, { status });
-    await this.cacheManager.del(transactionExternalId);
-    console.log('Transaction status updated');
+    await this.cacheManager.del(`transaction:${transactionExternalId}`);
+    Logger.log('Transaction status updated');
   }
 }

@@ -1,4 +1,4 @@
-import { Injectable, Inject, OnModuleInit } from '@nestjs/common';
+import { Injectable, Inject, OnModuleInit, Logger } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
 
 @Injectable()
@@ -18,12 +18,12 @@ export class AntiFraudService implements OnModuleInit {
           await this.kafkaClient.subscribeToResponseOf(topic);
         }
         await this.kafkaClient.connect();
-        console.log('Successfully connected to Kafka');
+        Logger.log('Successfully connected to Kafka');
         return;
       } catch (error) {
-        console.error(`Failed to connect to Kafka (attempt ${attempt}/${maxRetries}):`, error.message);
+        Logger.error(`Failed to connect to Kafka (attempt ${attempt}/${maxRetries}):`, error.message);
         if (attempt === maxRetries) {
-          console.error('Max retries reached. Failing to start the application.');
+          Logger.error('Max retries reached. Failing to start the application.');
           throw error;
         }
         await new Promise(resolve => setTimeout(resolve, 5000)); // Wait for 5 seconds before retrying
