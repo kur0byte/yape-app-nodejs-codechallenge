@@ -1,5 +1,5 @@
 services:
-  postgres:
+  postgres-primary:
     image: postgres:14
     environment:
       POSTGRES_USER: testuser
@@ -8,9 +8,48 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/run/postgresql/data
+      - postgres_primary_data:/var/lib/postgresql/data
     networks:
       - app-network
+    command: >
+      bash -c "
+      echo \"host replication testuser all md5\" >> /var/lib/postgresql/data/pg_hba.conf &&
+      echo \"host all all all md5\" >> /var/lib/postgresql/data/pg_hba.conf &&
+      docker-entrypoint.sh postgres -c config_file=/var/lib/postgresql/data/postgresql.conf
+      -c wal_level=replica
+      -c max_wal_senders=3
+      -c max_replication_slots=3
+      "
+
+  postgres-replica:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: testuser
+      POSTGRES_PASSWORD: adminPassword
+      POSTGRES_DB: financial_system
+      PGPASSWORD: adminPassword
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_replica_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    command: >
+      bash -c "
+      until pg_isready -h postgres-primary -p 5432 -U testuser; do sleep 1; done &&
+      PGPASSWORD=adminPassword psql -h postgres-primary -U testuser -d financial_system -c \"SELECT pg_drop_replication_slot('pgstandby1')\" || true &&
+      rm -rf /var/lib/postgresql/data/* &&
+      pg_basebackup -h postgres-primary -D /var/lib/postgresql/data -U testuser -P -v -R -X stream -C -S pgstandby1 &&
+      echo \"primary_conninfo = 'host=postgres-primary port=5432 user=testuser password=adminPassword'\" >> /var/lib/postgresql/data/postgresql.auto.conf &&
+      echo \"recovery_target_timeline = 'latest'\" >> /var/lib/postgresql/data/postgresql.auto.conf &&
+      touch /var/lib/postgresql/data/standby.signal &&
+      chown -R postgres:postgres /var/lib/postgresql/data &&
+      chmod 700 /var/lib/postgresql/data &&
+      su postgres -c 'postgres'
+      "
+    depends_on:
+      - postgres-primary
+
 
   redis:
     image: redis:latest
@@ -51,7 +90,6 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_CONFLUENT_LICENSE: "your-license-key" # Optional for enterprise features
     ports:
       - "9092:9092"
     volumes:
@@ -71,7 +109,9 @@ services:
     depends_on:
       kafka: 
         condition: service_healthy
-      postgres:
+      postgres-primary:
+        condition: service_started
+      postgres-replica:
         condition: service_started
       redis:
         condition: service_healthy
@@ -89,14 +129,17 @@ services:
     depends_on:
       kafka: 
         condition: service_healthy
-      postgres:
+      postgres-primary:
+        condition: service_started
+      postgres-replica:
         condition: service_started
       redis:
         condition: service_healthy
     ports:
       - "3001:3001"
     environment:
-      DB_HOST: postgres
+      DB_HOST: postgres-primary
+      DB_REPLICA_HOST: postgres-replica
       DB_PORT: 5432
       DB_USERNAME: testuser
       DB_PASSWORD: adminPassword
@@ -123,12 +166,15 @@ services:
     depends_on:
       kafka: 
         condition: service_healthy
-      postgres:
+      postgres-primary:
+        condition: service_started
+      postgres-replica:
         condition: service_started
       redis:
         condition: service_healthy
     environment:
-      DB_HOST: postgres
+      DB_HOST: postgres-primary
+      DB_REPLICA_HOST: postgres-replica
       DB_PORT: 5432
       DB_USERNAME: testuser
       DB_PASSWORD: adminPassword
@@ -147,7 +193,8 @@ services:
     ports:
       - "5050:80"
     depends_on:
-      - postgres
+      - postgres-primary
+      - postgres-replica
     networks:
       - app-network
 
@@ -156,7 +203,8 @@ networks:
     driver: bridge
 
 volumes:
-  postgres_data:
+  postgres_primary_data:
+  postgres_replica_data:
   zookeeper_data:
   zookeeper_log:
   kafka_data:
