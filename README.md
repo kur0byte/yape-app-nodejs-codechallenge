@@ -125,7 +125,7 @@ The Nginx load balancer will automatically distribute requests among these insta
 - Create Transaction: `POST /api/transactions`
 - Retrieve Transaction: `GET /api/transactions/{transactionExternalId}`
 
-For detailed API documentation, refer to the [API Documentation](#) (link to be added).
+For detailed API documentation, refer to the [API Documentation](http://localhost:3000/api/transactions/docs)
 
 ## Development
 
