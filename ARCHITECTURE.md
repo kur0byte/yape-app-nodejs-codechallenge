@@ -18,7 +18,7 @@ This document presents the solution for the Yape Code Challenge, which involves 
 
 ## 2. System Overview
 
-The architecture is designed as a microservices-based system that leverages event-driven communication to ensure scalability, resilience, and real-time processing. It consists of three main services: Transaction Service, Anti-Fraud Service, and Status Update Service. These services communicate through Apache Kafka, use PostgreSQL for data persistence, and employ Redis for caching to optimize performance.
+The architecture is designed as a microservices-based system that leverages event-driven communication to ensure scalability, resilience, and real-time processing. It consists of multiple distributed services, each with its own load balancer, communicating through Apache Kafka, using PostgreSQL for data persistence, and employing Redis for caching to optimize performance.
 
 ## 3. Architecture Components
 
@@ -240,6 +240,13 @@ Each Nginx load balancer is configured with the following structure:
 ### 9.1 Containerization
 - Use Docker to containerize each microservice and its dependencies.
 - Create a docker-compose.yml file for local development and testing.
+
+### 9.2 Service Scaling
+- Utilize Docker Compose's scale command to run multiple instances of each service.
+- Nginx load balancers automatically distribute requests among these instances.
+
+### 9.3 Network Configuration
+Configure services to operate within the appropriate network (public or internal) as defined in the architecture.
 
 ## 10. Load Balancing Strategy
 The system uses Nginx as a layer 7 load balancer with the following strategy:
