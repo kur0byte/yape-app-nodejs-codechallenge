@@ -25,11 +25,14 @@ The project is organized into the following main directories:
 │   ├── status-update-service
 │   ├── dockerfiles
 │   ├── docker-compose.yml
-│   └── nginx/
-│        ├── api-gateway.conf
-│        ├── transaction-service.conf
-│        ├── anti-fraud-service.conf
-│        └── status-update-service.conf
+│   ├── nginx/
+│   │    ├── api-gateway.conf
+│   │    ├── transaction-service.conf
+│   │    ├── anti-fraud-service.conf
+│   │    └── status-update-service.conf
+│   └── scripts/
+│        ├──build-docker.sh
+│        └── docker-compose-scaled.sh
 ├── iac/
 │   └── main.tf
 ├── ARCHITECTURE.md  ## High-level workflows
