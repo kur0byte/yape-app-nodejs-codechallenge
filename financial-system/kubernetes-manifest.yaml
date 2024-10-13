@@ -1,0 +1,453 @@
+---
+# ConfigMap for environment variables
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: yape-config
+data:
+  POSTGRES_USER: testuser
+  POSTGRES_DB: financial_system
+  DB_HOST: postgres-primary
+  DB_REPLICA_HOST: postgres-replica
+  DB_PORT: "5432"
+  DB_NAME: financial_system
+  DB_SYNCHRONIZE: "true"
+  KAFKA_BROKER: kafka:9092
+  REDIS_HOST: redis
+  REDIS_PORT: "6379"
+  ZOOKEEPER_CLIENT_PORT: "2181"
+  KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+
+---
+# Secret for sensitive data
+apiVersion: v1
+kind: Secret
+metadata:
+  name: yape-secrets
+type: Opaque
+stringData:
+  POSTGRES_PASSWORD: adminPassword
+  DB_USERNAME: testuser
+  DB_PASSWORD: adminPassword
+
+---
+# Persistent Volume Claims
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-primary-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-replica-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: zookeeper-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kafka-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+# Deployments
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-primary
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-primary
+  template:
+    metadata:
+      labels:
+        app: postgres-primary
+    spec:
+      containers:
+      - name: postgres-primary
+        image: postgres:14
+        envFrom:
+        - configMapRef:
+            name: yape-config
+        - secretRef:
+            name: yape-secrets
+        ports:
+        - containerPort: 5432
+        volumeMounts:
+        - name: postgres-primary-storage
+          mountPath: /var/lib/postgresql/data
+      volumes:
+      - name: postgres-primary-storage
+        persistentVolumeClaim:
+          claimName: postgres-primary-data
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-replica
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-replica
+  template:
+    metadata:
+      labels:
+        app: postgres-replica
+    spec:
+      containers:
+      - name: postgres-replica
+        image: postgres:14
+        envFrom:
+        - configMapRef:
+            name: yape-config
+        - secretRef:
+            name: yape-secrets
+        ports:
+        - containerPort: 5432
+        volumeMounts:
+        - name: postgres-replica-storage
+          mountPath: /var/lib/postgresql/data
+      volumes:
+      - name: postgres-replica-storage
+        persistentVolumeClaim:
+          claimName: postgres-replica-data
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:latest
+        ports:
+        - containerPort: 6379
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zookeeper
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zookeeper
+  template:
+    metadata:
+      labels:
+        app: zookeeper
+    spec:
+      containers:
+      - name: zookeeper
+        image: confluentinc/cp-zookeeper:latest
+        envFrom:
+        - configMapRef:
+            name: yape-config
+        ports:
+        - containerPort: 2181
+        volumeMounts:
+        - name: zookeeper-storage
+          mountPath: /var/lib/zookeeper/data
+      volumes:
+      - name: zookeeper-storage
+        persistentVolumeClaim:
+          claimName: zookeeper-data
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka
+  template:
+    metadata:
+      labels:
+        app: kafka
+    spec:
+      containers:
+      - name: kafka
+        image: confluentinc/cp-kafka:latest
+        envFrom:
+        - configMapRef:
+            name: yape-config
+        ports:
+        - containerPort: 9092
+        volumeMounts:
+        - name: kafka-storage
+          mountPath: /var/lib/kafka/data
+      volumes:
+      - name: kafka-storage
+        persistentVolumeClaim:
+          claimName: kafka-data
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+      - name: api-gateway
+        image: kur0dev/api-gateway:latest
+        envFrom:
+        - configMapRef:
+            name: yape-config
+        ports:
+        - containerPort: 3000
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: transaction-service
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: transaction-service
+  template:
+    metadata:
+      labels:
+        app: transaction-service
+    spec:
+      containers:
+      - name: transaction-service
+        image: kur0dev/transaction-service:latest
+        envFrom:
+        - configMapRef:
+            name: yape-config
+        - secretRef:
+            name: yape-secrets
+        ports:
+        - containerPort: 3001
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: anti-fraud-service
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: anti-fraud-service
+  template:
+    metadata:
+      labels:
+        app: anti-fraud-service
+    spec:
+      containers:
+      - name: anti-fraud-service
+        image: kur0dev/anti-fraud-service:latest
+        envFrom:
+        - configMapRef:
+            name: yape-config
+        ports:
+        - containerPort: 3002
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: status-update-service
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: status-update-service
+  template:
+    metadata:
+      labels:
+        app: status-update-service
+    spec:
+      containers:
+      - name: status-update-service
+        image: kur0dev/status-update-service:latest
+        envFrom:
+        - configMapRef:
+            name: yape-config
+        - secretRef:
+            name: yape-secrets
+        ports:
+        - containerPort: 3003
+
+---
+# Services
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-primary
+spec:
+  selector:
+    app: postgres-primary
+  ports:
+    - port: 5432
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-replica
+spec:
+  selector:
+    app: postgres-replica
+  ports:
+    - port: 5432
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+spec:
+  selector:
+    app: redis
+  ports:
+    - port: 6379
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zookeeper
+spec:
+  selector:
+    app: zookeeper
+  ports:
+    - port: 2181
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka
+spec:
+  selector:
+    app: kafka
+  ports:
+    - port: 9092
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+spec:
+  type: LoadBalancer
+  selector:
+    app: api-gateway
+  ports:
+    - port: 80
+      targetPort: 3000
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: transaction-service
+spec:
+  selector:
+    app: transaction-service
+  ports:
+    - port: 3001
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: anti-fraud-service
+spec:
+  selector:
+    app: anti-fraud-service
+  ports:
+    - port: 3002
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: status-update-service
+spec:
+  selector:
+    app: status-update-service
+  ports:
+    - port: 3003
+
+---
+# Ingress for API Gateway
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api-gateway-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /api(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: api-gateway
+            port: 
+              number: 80
