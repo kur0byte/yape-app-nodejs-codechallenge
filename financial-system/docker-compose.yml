@@ -10,7 +10,7 @@ services:
     volumes:
       - postgres_primary_data:/var/lib/postgresql/data
     networks:
-      - app-network
+      - internal_network
     command: >
       bash -c "
       echo \"host replication testuser all md5\" >> /var/lib/postgresql/data/pg_hba.conf &&
@@ -33,7 +33,7 @@ services:
     volumes:
       - postgres_replica_data:/var/lib/postgresql/data
     networks:
-      - app-network
+      - internal_network
     command: >
       bash -c "
       until pg_isready -h postgres-primary -p 5432 -U testuser; do sleep 1; done &&
@@ -56,7 +56,7 @@ services:
     ports:
       - "6379:6379"
     networks:
-      - app-network
+      - internal_network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -71,7 +71,7 @@ services:
       - zookeeper_data:/var/lib/zookeeper/data
       - zookeeper_log:/var/lib/zookeeper/log
     networks:
-      - app-network
+      - internal_network
     healthcheck:
       test: ["CMD", "echo", "ruok", "|", "nc", "localhost", "2201", "|", "grep", "imok"]
       interval: 10s
@@ -100,7 +100,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - app-network
+      - internal_network
 
   api-gateway-nginx:
     image: nginx:latest
@@ -111,14 +111,13 @@ services:
     depends_on:
       - api-gateway
     networks:
-      - app-network
+        - public_network
+        - internal_network
 
   api-gateway:
     build: ./api-gateway
     # deploy:
     #   replicas: 3
-    # ports:
-    #   - "3000:3000"
     depends_on:
       kafka: 
         condition: service_healthy
@@ -129,11 +128,11 @@ services:
       redis:
         condition: service_healthy
     environment:
-      TRANSACTION_SERVICE_URL: http://transaction-service:3001
-      ANTI_FRAUD_SERVICE_URL: http://anti-fraud-service:3002
-      STATUS_UPDATE_SERVICE_URL: http://status-update-service:3003
+      TRANSACTION_SERVICE_URL: http://transaction-service-nginx
+      ANTI_FRAUD_SERVICE_URL: http://anti-fraud-service-nginx
+      STATUS_UPDATE_SERVICE_URL: http://status-update-service-nginx
     networks:
-      - app-network
+      - internal_network
   
   transaction-service-nginx:
     image: nginx:latest
@@ -144,7 +143,8 @@ services:
     depends_on:
       - transaction-service
     networks:
-      - app-network
+      - internal_network
+      - public_network
 
   transaction-service:
     build: ./transaction-service
@@ -175,7 +175,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
     networks:
-      - app-network
+      - internal_network
 
   anti-fraud-service-nginx:
     image: nginx:latest
@@ -186,7 +186,7 @@ services:
     depends_on:
       - anti-fraud-service
     networks:
-      - app-network
+      - internal_network
 
   anti-fraud-service:
     build: ./anti-fraud-service
@@ -198,7 +198,7 @@ services:
     environment:
       KAFKA_BROKER: kafka:29092
     networks:
-      - app-network
+      - internal_network
 
   status-update-service-nginx:
     image: nginx:latest
@@ -209,7 +209,7 @@ services:
     depends_on:
       - status-update-service
     networks:
-      - app-network
+      - internal_network
 
   status-update-service:
     build: ./status-update-service
@@ -235,7 +235,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
     networks:
-      - app-network
+      - internal_network
 
   pgadmin:
     image: dpage/pgadmin4:latest
@@ -248,11 +248,17 @@ services:
       - postgres-primary
       - postgres-replica
     networks:
-      - app-network
+      - public_network
+      - internal_network
 
 networks:
-  app-network:
+  public_network:
     driver: bridge
+  internal_network:
+    driver: bridge
+    internal: true
+  # app-network:
+  #   driver: bridge
 
 volumes:
   postgres_primary_data:
@@ -260,5 +266,3 @@ volumes:
   zookeeper_data:
   zookeeper_log:
   kafka_data:
-  prometheus_data:
-  grafana_data:

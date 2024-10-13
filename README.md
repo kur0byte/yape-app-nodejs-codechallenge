@@ -6,6 +6,9 @@ This project implements a scalable financial transaction system for Yape, design
 2. [Prerequisites](#prerequisites)
 3. [Getting Started](#getting-started)
 4. [Services](#services)
+5. [Network Architecture](#network-architecture)
+5. [Load Balancing](#load-balancing)
+5. [Scaling Services](#scaling-services)
 5. [API Endpoints](#api-endpoints)
 6. [Development](#development)
 7. [Testing](#testing)
@@ -99,6 +102,17 @@ To initialize and run the project using Docker Compose, follow these steps:
 - **Zookeeper**: Distributed coordination service (Port 2201)
 - **pgAdmin**: Database management tool (Port 5050)
 
+## Network Architecture
+
+The system is designed with two distinct network layers:
+1. Public Network:
+   - Accessible from outside the system
+   - Contains the main load balancer and API Gateway
+2. Internal Network:
+   - Isolated from direct external access
+   - Contains all microservices, databases, caching layer, and message brokers
+   - Enhances security by limiting exposure of critical components
+
 ## Load Balancing
 
 Each microservice in this system is fronted by an Nginx load balancer.
@@ -115,7 +129,7 @@ docker compose up --scale transaction-service=3 -d
 
 For example:
 ```bash
-docker compose up --build --scale transaction-service=3 --scale anti-fraud-service=3 --scale status-update-service=3 -d
+docker compose up --build --scale transaction-service=3 --scale anti-fraud-service=3 --scale status-update-service=3 --scale api-gateway=3 -d
 ```
 
 The Nginx load balancer will automatically distribute requests among these instances.
