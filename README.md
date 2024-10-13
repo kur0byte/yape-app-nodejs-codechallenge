@@ -107,7 +107,12 @@ The Nginx configurations for each service can be found in the `nginx/` directory
 To scale a service, you can use Docker Compose's scale command. For example, to run 3 instances of the transaction service:
 
 ```bash
-   bashCopydocker-compose up --scale transaction-service=3 -d
+docker compose up --scale transaction-service=3 -d
+```
+
+For example:
+```bash
+docker compose up --build --scale transaction-service=3 --scale anti-fraud-service=3 --scale status-update-service=3 -d
 ```
 
 The Nginx load balancer will automatically distribute requests among these instances.
