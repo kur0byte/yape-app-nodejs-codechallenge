@@ -115,8 +115,8 @@ services:
 
   api-gateway:
     build: ./api-gateway
-    deploy:
-      replicas: 3
+    # deploy:
+    #   replicas: 3
     # ports:
     #   - "3000:3000"
     depends_on:
@@ -148,8 +148,8 @@ services:
 
   transaction-service:
     build: ./transaction-service
-    deploy:
-      replicas: 3
+    # deploy:
+    #   replicas: 3
     links:
       - redis
     depends_on:
@@ -190,8 +190,8 @@ services:
 
   anti-fraud-service:
     build: ./anti-fraud-service
-    deploy:
-      replicas: 3
+    # deploy:
+    #   replicas: 3
     depends_on:
       kafka: 
         condition: service_healthy
@@ -213,8 +213,8 @@ services:
 
   status-update-service:
     build: ./status-update-service
-    deploy:
-      replicas: 3
+    # deploy:
+    #   replicas: 3
     depends_on:
       kafka: 
         condition: service_healthy
