@@ -39,6 +39,9 @@ The architecture is designed as a microservices-based system that leverages even
 ### 3.4 API Gateway
 - **Node.js with Express.js**: Handles incoming API requests and routes them to appropriate services.
 
+### 3.5 Load Balancing
+- **Nginx**: Used as a reverse proxy and load balancer for each microservice to distribute incoming requests and improve scalability.
+
 ## 4. Detailed Component Design
 
 ### 4.1 Transaction Service
@@ -89,22 +92,56 @@ Value: {JSON representation of transaction}
 Expiration: 5 minutes
 ```
 
-## 5. High-Level Workflow
+## 4.5 Nginx Load Balancers
+Each microservice is fronted by an Nginx load balancer to distribute incoming requests across multiple instances of the service. This setup improves the system's scalability and reliability.
+Nginx Configuration Structure
 
-1. Client sends a POST request to create a transaction.
-2. API Gateway routes the request to the Transaction Service.
-3. Transaction Service:
+Each Nginx load balancer is configured with the following structure:
+```nginx
+  nginxCopyevents {
+      worker_connections 1024;
+  }
+
+  http {
+      upstream backend {
+          server service1:port;
+          server service2:port;
+          server service3:port;
+      }
+
+      server {
+          listen 80;
+
+          location / {
+              proxy_pass http://backend;
+              proxy_set_header Host $host;
+              proxy_set_header X-Real-IP $remote_addr;
+              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          }
+      }
+  }
+```
+
+## 5. High-Level Workflow
+1. Client sends a request to the API Gateway.
+2. API Gateway Nginx load balancer distributes the request to one of the API Gateway instances.
+3. API Gateway routes the request to the appropriate microservice's Nginx load balancer.
+4. The microservice's Nginx load balancer distributes the request to one of the service instances.
+5. The service processes the request and returns the response through the reverse path.
+6. Client sends a POST request to create a transaction.
+7. API Gateway routes the request to the Transaction Service.
+8. Transaction Service:
    a. Validates input
    b. Generates a unique external_id
    c. Saves transaction to PostgreSQL with 'pending' status
    d. Publishes "Transaction Created" event to Kafka
    e. Stores Transaction in Redis cache
    f. Returns transaction details to client
-4. Anti-Fraud Service:
+9. Anti-Fraud Service:
    a. Consumes "Transaction Created" event
    b. Applies fraud detection rules
    c. Publishes "Transaction Status Updated" event with new status
-5. Status Update Service:
+10. Status Update Service:
    a. Consumes "Transaction Status Updated" event
    b. Updates transaction status in PostgreSQL
    c. Invalidates Redis cache for the updated transaction
@@ -203,3 +240,10 @@ Expiration: 5 minutes
 ### 9.1 Containerization
 - Use Docker to containerize each microservice and its dependencies.
 - Create a docker-compose.yml file for local development and testing.
+
+## 10. Load Balancing Strategy
+The system uses Nginx as a layer 7 load balancer with the following strategy:
+
+- **Round Robin**: By default, Nginx uses a round-robin algorithm to distribute requests across the available service instances. This ensures an even distribution of load.
+- **Health Checks**: Nginx performs passive health checks. If a server fails to respond, it will be temporarily marked as unavailable and won't receive new requests until it recovers.
+- **Scalability**: The load balancing setup allows for easy horizontal scaling. New service instances can be added to the Nginx configuration to handle increased load.

@@ -24,7 +24,12 @@ The project is organized into the following main directories:
 │   ├── transaction-service
 │   ├── status-update-service
 │   ├── dockerfiles
-│   └── docker-compose.yml
+│   ├── docker-compose.yml
+│   └── nginx/
+│        ├── api-gateway.conf
+│        ├── transaction-service.conf
+│        ├── anti-fraud-service.conf
+│        └── status-update-service.conf
 ├── iac/
 │   └── main.tf
 ├── ARCHITECTURE.md  ## High-level workflows
@@ -83,12 +88,18 @@ To initialize and run the project using Docker Compose, follow these steps:
 - **Transaction Service**: Manages transaction creation and retrieval (Port 3001)
 - **Anti-Fraud Service**: Validates transactions
 - **Status Update Service**: Updates transaction statuses
+- **Nginx Load Balancers**: Each service has its own Nginx load balancer to distribute requests
 - **PostgreSQL**: Primary database (Port 5432)
 - **PostgreSQL Replica**: Read replica for the primary database (Port 5433)
 - **Redis**: Caching layer (Port 6379)
 - **Kafka**: Message broker (Port 9092)
 - **Zookeeper**: Distributed coordination service (Port 2201)
 - **pgAdmin**: Database management tool (Port 5050)
+
+## Load Balancing
+Each microservice in this system is fronted by an Nginx load balancer.
+
+The Nginx configurations for each service can be found in the `nginx/` directory. To modify the load balancing strategy or add more service instances, update the respective Nginx configuration file and the `docker-compose.yml` file.
 
 ## API Endpoints
 
