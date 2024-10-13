@@ -130,21 +130,21 @@ Each Nginx load balancer is configured with the following structure:
 5. The service processes the request and returns the response through the reverse path.
 6. Client sends a POST request to create a transaction.
 7. API Gateway routes the request to the Transaction Service.
-8. Transaction Service:
-   a. Validates input
-   b. Generates a unique external_id
-   c. Saves transaction to PostgreSQL with 'pending' status
-   d. Publishes "Transaction Created" event to Kafka
-   e. Stores Transaction in Redis cache
-   f. Returns transaction details to client
-9. Anti-Fraud Service:
-   a. Consumes "Transaction Created" event
-   b. Applies fraud detection rules
-   c. Publishes "Transaction Status Updated" event with new status
-10. Status Update Service:
-   a. Consumes "Transaction Status Updated" event
-   b. Updates transaction status in PostgreSQL
-   c. Invalidates Redis cache for the updated transaction
+8. Transaction Service: <br/>
+   a. Validates input <br/>
+   b. Generates a unique external_id <br/>
+   c. Saves transaction to PostgreSQL with 'pending' status <br/>
+   d. Publishes "Transaction Created" event to Kafka <br/>
+   e. Stores Transaction in Redis cache <br/>
+   f. Returns transaction details to client <br/>
+9. Anti-Fraud Service: <br/>
+   a. Consumes "Transaction Created" event <br/>
+   b. Applies fraud detection rules <br/>
+   c. Publishes "Transaction Status Updated" event with new status <br/>
+10. Status Update Service: <br/>
+   a. Consumes "Transaction Status Updated" event <br/>
+   b. Updates transaction status in PostgreSQL <br/>
+   c. Invalidates Redis cache for the updated transaction <br/>
 
 ## 6. Scalability and Performance Optimizations
 
