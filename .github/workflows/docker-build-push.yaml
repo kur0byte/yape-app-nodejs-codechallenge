@@ -15,6 +15,24 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v4
 
+      - name: Debug - Print GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+
+      - name: Debug - Check if secrets exist
+        run: |
+          if [ -n "${{ secrets.DOCKER_USERNAME }}" ]; then
+            echo "DOCKER_USERNAME secret is set"
+          else
+            echo "DOCKER_USERNAME secret is not set"
+          fi
+          if [ -n "${{ secrets.DOCKER_PASSWORD }}" ]; then
+            echo "DOCKER_PASSWORD secret is set"
+          else
+            echo "DOCKER_PASSWORD secret is not set"
+          fi
+
       - name: Log in to Docker Hub
         uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
         with:
