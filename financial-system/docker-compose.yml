@@ -102,10 +102,23 @@ services:
     networks:
       - app-network
 
+  api-gateway-nginx:
+    image: nginx:latest
+    volumes:
+      - ./nginx/api-gateway.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "3000:80"
+    depends_on:
+      - api-gateway
+    networks:
+      - app-network
+
   api-gateway:
     build: ./api-gateway
-    ports:
-      - "3000:3000"
+    deploy:
+      replicas: 3
+    # ports:
+    #   - "3000:3000"
     depends_on:
       kafka: 
         condition: service_healthy
@@ -121,9 +134,22 @@ services:
       STATUS_UPDATE_SERVICE_URL: http://status-update-service:3003
     networks:
       - app-network
+  
+  transaction-service-nginx:
+    image: nginx:latest
+    volumes:
+      - ./nginx/transaction-service.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "3001:80"
+    depends_on:
+      - transaction-service
+    networks:
+      - app-network
 
   transaction-service:
     build: ./transaction-service
+    deploy:
+      replicas: 3
     links:
       - redis
     depends_on:
@@ -135,8 +161,8 @@ services:
         condition: service_started
       redis:
         condition: service_healthy
-    ports:
-      - "3001:3001"
+    # ports:
+    #   - "3001:3001"
     environment:
       DB_HOST: postgres-primary
       DB_REPLICA_HOST: postgres-replica
@@ -151,8 +177,21 @@ services:
     networks:
       - app-network
 
+  anti-fraud-service-nginx:
+    image: nginx:latest
+    volumes:
+      - ./nginx/anti-fraud-service.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "3002:80"
+    depends_on:
+      - anti-fraud-service
+    networks:
+      - app-network
+
   anti-fraud-service:
     build: ./anti-fraud-service
+    deploy:
+      replicas: 3
     depends_on:
       kafka: 
         condition: service_healthy
@@ -161,8 +200,21 @@ services:
     networks:
       - app-network
 
+  status-update-service-nginx:
+    image: nginx:latest
+    volumes:
+      - ./nginx/status-update-service.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "3003:80"
+    depends_on:
+      - status-update-service
+    networks:
+      - app-network
+
   status-update-service:
     build: ./status-update-service
+    deploy:
+      replicas: 3
     depends_on:
       kafka: 
         condition: service_healthy
@@ -198,6 +250,32 @@ services:
     networks:
       - app-network
 
+  prometheus:
+    image: prom/prometheus:v2.30.3
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    ports:
+      - 9090:9090
+    networks:
+      - app-network
+
+  grafana:
+    image: grafana/grafana:8.2.2
+    depends_on:
+      - prometheus
+    ports:
+      - 3005:3000
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - app-network
+
 networks:
   app-network:
     driver: bridge
@@ -208,3 +286,5 @@ volumes:
   zookeeper_data:
   zookeeper_log:
   kafka_data:
+  prometheus_data:
+  grafana_data:
