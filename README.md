@@ -64,7 +64,7 @@ To initialize and run the project using Docker Compose, follow these steps:
 
 1. Clone the repository:
    ```
-   git clone https://github.com/your-username/yape-financial-system.git
+   git clone https://github.com/kur0byte/yape-app-nodejs-codechallenge.git
    cd financial-system
    ```
 
@@ -97,9 +97,20 @@ To initialize and run the project using Docker Compose, follow these steps:
 - **pgAdmin**: Database management tool (Port 5050)
 
 ## Load Balancing
+
 Each microservice in this system is fronted by an Nginx load balancer.
 
 The Nginx configurations for each service can be found in the `nginx/` directory. To modify the load balancing strategy or add more service instances, update the respective Nginx configuration file and the `docker-compose.yml` file.
+
+## Scaling Services
+
+To scale a service, you can use Docker Compose's scale command. For example, to run 3 instances of the transaction service:
+
+```bash
+   bashCopydocker-compose up --scale transaction-service=3 -d
+```
+
+The Nginx load balancer will automatically distribute requests among these instances.
 
 ## API Endpoints
 
