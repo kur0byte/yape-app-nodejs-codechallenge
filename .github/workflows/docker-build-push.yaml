@@ -37,7 +37,7 @@ jobs:
     - name: Build and push API Gateway image
       uses: docker/build-push-action@v4
       with:
-        context: ./api-gateway
+        context: ./finance-system/api-gateway
         push: true
         tags: ${{ steps.meta.outputs.tags }}-api-gateway
         labels: ${{ steps.meta.outputs.labels }}
@@ -45,7 +45,7 @@ jobs:
     - name: Build and push Transaction Service image
       uses: docker/build-push-action@v4
       with:
-        context: ./transaction-service
+        context: ./finance-system/transaction-service
         push: true
         tags: ${{ steps.meta.outputs.tags }}-transaction-service
         labels: ${{ steps.meta.outputs.labels }}
@@ -53,7 +53,7 @@ jobs:
     - name: Build and push Anti-Fraud Service image
       uses: docker/build-push-action@v4
       with:
-        context: ./anti-fraud-service
+        context: ./finance-system/anti-fraud-service
         push: true
         tags: ${{ steps.meta.outputs.tags }}-anti-fraud-service
         labels: ${{ steps.meta.outputs.labels }}
@@ -61,7 +61,7 @@ jobs:
     - name: Build and push Status Update Service image
       uses: docker/build-push-action@v4
       with:
-        context: ./status-update-service
+        context: ./finance-system/status-update-service
         push: true
         tags: ${{ steps.meta.outputs.tags }}-status-update-service
         labels: ${{ steps.meta.outputs.labels }}
