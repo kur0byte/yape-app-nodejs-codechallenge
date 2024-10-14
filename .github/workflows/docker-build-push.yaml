@@ -1,40 +1,67 @@
-name: Build and Push Docker Images
+name: Build and Publish Docker Images
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
+  release:
+    types: [ created ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build-and-push:
+  build-and-push-images:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        service: [api-gateway, transaction-service, anti-fraud-service, status-update-service]
+    permissions:
+      contents: read
+      packages: write
+
     steps:
-      - name: Check out code
-        uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+    - name: Log in to the Container registry
+      uses: docker/login-action@v3.3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
-        with:
-          images: ${{ secrets.DOCKER_HUB_USERNAME }}/${{ matrix.service }}
-          tags: |
-            type=raw,value=latest
-            type=sha,format=long
+    - name: Extract metadata (tags, labels) for Docker
+      id: meta
+      uses: docker/metadata-action@v4
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
-        with:
-          context: ./financial-system/${{ matrix.service }}
-          file: ./financial-system/${{ matrix.service }}/Dockerfile
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+    - name: Build and push API Gateway image
+      uses: docker/build-push-action@v4
+      with:
+        context: ./api-gateway
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}-api-gateway
+        labels: ${{ steps.meta.outputs.labels }}
+
+    - name: Build and push Transaction Service image
+      uses: docker/build-push-action@v4
+      with:
+        context: ./transaction-service
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}-transaction-service
+        labels: ${{ steps.meta.outputs.labels }}
+
+    - name: Build and push Anti-Fraud Service image
+      uses: docker/build-push-action@v4
+      with:
+        context: ./anti-fraud-service
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}-anti-fraud-service
+        labels: ${{ steps.meta.outputs.labels }}
+
+    - name: Build and push Status Update Service image
+      uses: docker/build-push-action@v4
+      with:
+        context: ./status-update-service
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}-status-update-service
+        labels: ${{ steps.meta.outputs.labels }}
