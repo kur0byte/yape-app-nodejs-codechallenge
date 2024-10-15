@@ -8,18 +8,19 @@ services:
     ports:
       - "5432:5432"
     volumes:
+      - ./pg-init-scripts:/docker-entrypoint-initdb.d
       - postgres_primary_data:/var/lib/postgresql/data
     networks:
       - internal_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U testuser -d financial_system"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     command: >
-      bash -c "
-      echo \"host replication testuser all md5\" >> /var/lib/postgresql/data/pg_hba.conf &&
-      echo \"host all all all md5\" >> /var/lib/postgresql/data/pg_hba.conf &&
-      docker-entrypoint.sh postgres -c config_file=/var/lib/postgresql/data/postgresql.conf
-      -c wal_level=replica
-      -c max_wal_senders=3
-      -c max_replication_slots=3
-      "
+      -c wal_level=logical
+      -c max_wal_senders=10
+      -c max_replication_slots=10
 
   postgres-replica:
     image: postgres:14
@@ -27,29 +28,18 @@ services:
       POSTGRES_USER: testuser
       POSTGRES_PASSWORD: adminPassword
       POSTGRES_DB: financial_system
-      PGPASSWORD: adminPassword
     ports:
       - "5433:5432"
     volumes:
+      - ./replica-init-scripts:/docker-entrypoint-initdb.d
       - postgres_replica_data:/var/lib/postgresql/data
     networks:
       - internal_network
-    command: >
-      bash -c "
-      until pg_isready -h postgres-primary -p 5432 -U testuser; do sleep 1; done &&
-      PGPASSWORD=adminPassword psql -h postgres-primary -U testuser -d financial_system -c \"SELECT pg_drop_replication_slot('pgstandby1')\" || true &&
-      rm -rf /var/lib/postgresql/data/* &&
-      pg_basebackup -h postgres-primary -D /var/lib/postgresql/data -U testuser -P -v -R -X stream -C -S pgstandby1 &&
-      echo \"primary_conninfo = 'host=postgres-primary port=5432 user=testuser password=adminPassword'\" >> /var/lib/postgresql/data/postgresql.auto.conf &&
-      echo \"recovery_target_timeline = 'latest'\" >> /var/lib/postgresql/data/postgresql.auto.conf &&
-      touch /var/lib/postgresql/data/standby.signal &&
-      chown -R postgres:postgres /var/lib/postgresql/data &&
-      chmod 700 /var/lib/postgresql/data &&
-      su postgres -c 'postgres'
-      "
     depends_on:
-      - postgres-primary
-
+      postgres-primary:
+        condition: service_healthy
+    command: >
+      -c hot_standby=on
 
   redis:
     image: redis:latest
