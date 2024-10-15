@@ -1,7 +1,8 @@
-import { Module } from "@nestjs/common";
+import { Module, Logger, OnModuleInit } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { Transaction } from "./Transaction/Transaction.entity"; // Adjust the import path as needed
+import { DataSource } from "typeorm";
+import { Transaction } from "./Transaction/Transaction.entity";
 import { TransactionModule } from "./Transaction/Transaction.module";
 
 @Module({
@@ -14,33 +15,43 @@ import { TransactionModule } from "./Transaction/Transaction.module";
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
-        replication: {
-          master: {
-            host: configService.get<string>('DB_HOST'),
-            port: configService.get<number>('DB_PORT'),
-            username: configService.get<string>('DB_USERNAME'),
-            password: configService.get<string>('DB_PASSWORD'),
-            database: configService.get<string>('DB_NAME'),
-          },
-          slaves: [{
-            host: configService.get<string>('DB_REPLICA_HOST'),
-            port: configService.get<number>('DB_REPLICA_PORT') || configService.get<number>('DB_PORT'),
-            username: configService.get<string>('DB_USERNAME'),
-            password: configService.get<string>('DB_PASSWORD'),
-            database: configService.get<string>('DB_NAME'),
-          }],
-        },
+        host: configService.get<string>('DB_HOST'),
+        port: configService.get<number>('DB_PORT'),
+        username: configService.get<string>('DB_USERNAME'),
+        password: configService.get<string>('DB_PASSWORD'),
+        database: configService.get<string>('DB_NAME'),
         entities: [Transaction],
         synchronize: configService.get<boolean>('DB_SYNCHRONIZE'),
-        extra: {
-          max: 100,
-          idleTimeoutMillis: 30000, 
-        },
+        logging: true,
+        logger: 'advanced-console',
       }),
       inject: [ConfigService],
     }),
     TransactionModule,
   ],
-  exports: [ConfigModule, TypeOrmModule],
 })
-export class AppModule {}
+export class AppModule implements OnModuleInit {
+  private readonly logger = new Logger(AppModule.name);
+
+  constructor(
+    private configService: ConfigService,
+    private dataSource: DataSource
+  ) {}
+
+  async onModuleInit() {
+    this.logger.log(`DB_SYNCHRONIZE: ${this.configService.get<boolean>('DB_SYNCHRONIZE')}`);
+    this.logger.log(`DataSource isInitialized: ${this.dataSource.isInitialized}`);
+
+    if (this.configService.get<boolean>('DB_SYNCHRONIZE')) {
+      try {
+        if (!this.dataSource.isInitialized) {
+          await this.dataSource.initialize();
+        }
+        await this.dataSource.synchronize();
+        this.logger.log('Database schema synchronized');
+      } catch (error) {
+        this.logger.error('Failed to synchronize database schema', error);
+      }
+    }
+  }
+}
