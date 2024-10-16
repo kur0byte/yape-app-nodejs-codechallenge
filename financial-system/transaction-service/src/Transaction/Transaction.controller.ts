@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Param, Logger } from '@nestjs/common';
 import { TransactionService } from './Transaction.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { Transaction } from './Transaction.entity';
-import { ApiBadRequestResponse, ApiOkResponse, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBadRequestResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { TransactionDto } from './dto/transaction.dto';
 
 @ApiTags('transactions')
@@ -28,7 +28,8 @@ export class TransactionController {
 
   @Get()
   @ApiOperation({ summary: 'Get all transactions' })
-  @ApiResponse({ status: 200, description: 'Transactions have been successfully retrieved.' })
+  @ApiResponse({ status: 200, description: 'Transactions have been successfully retrieved.', type: [TransactionDto]})
+  @ApiNotFoundResponse({ description: 'Transactions not found.' })
   find() {
     return this.transactionService.find()
   }
