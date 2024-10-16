@@ -32,8 +32,8 @@ export class TransactionService {
     return transaction;
   }
 
-  async findOne(id: string): Promise<Transaction> {
-    const cachedTransaction = await this.cacheManager.get<Transaction>(`transaction:${id}`)
+  async findOne(externalId: string): Promise<Transaction> {
+    const cachedTransaction = await this.cacheManager.get<Transaction>(`transaction:${externalId}`)
     
     if (cachedTransaction) {
       return cachedTransaction
@@ -41,6 +41,6 @@ export class TransactionService {
 
     const results = await this.transactionRepository.createQueryBuilder('transaction');
 
-    return await this.transactionRepository.findOne({where: {externalId: id}});
+    return await this.transactionRepository.findOne({where: {externalId}});
   }
 }

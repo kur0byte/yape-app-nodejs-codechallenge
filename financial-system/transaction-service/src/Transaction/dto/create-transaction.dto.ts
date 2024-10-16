@@ -1,13 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsUUID, IsNumber, IsPositive } from 'class-validator';
+import { IsNumber, IsPositive } from 'class-validator';
 
 export class CreateTransactionDto {
-  @ApiProperty({ example: 'f7b3b3b0-3b7b-4b7b-8b7b-7b7b7b7b7b7b', type: 'guid' })
-  @IsUUID()
+  @ApiProperty({ example: 'f7b3b3b0-3b7b-4b7b-8b7b-7b7b7b7b7b7b', type: 'string' })
   accountExternalIdDebit: string;
 
-  @ApiProperty({ example: 'f7b3b3b0-3b7b-4b7b-8b7b-7b7b7b7b7b7b', type: 'guid' })
-  @IsUUID()
+  @ApiProperty({ example: 'f7b3b3b0-3b7b-4b7b-8b7b-7b7b7b7b7b7b', type: 'string' })
   accountExternalIdCredit: string;
 
   @ApiProperty({ example: 1 })

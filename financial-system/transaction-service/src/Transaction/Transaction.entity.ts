@@ -6,7 +6,7 @@ export class Transaction {
   id: number;
 
   @Index()
-  @Column({ type: 'uuid', unique: true })
+  @Column({ unique: true })
   externalId: string;
 
   @Column({ type: 'uuid' })
