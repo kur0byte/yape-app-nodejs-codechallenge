@@ -28,14 +28,9 @@ The project is organized into the following main directories:
 │   ├── status-update-service
 │   ├── dockerfiles
 │   ├── docker-compose.yml
-│   ├── nginx/
-│   │    ├── api-gateway.conf
-│   │    ├── transaction-service.conf
-│   │    ├── anti-fraud-service.conf
-│   │    └── status-update-service.conf
-│   └── scripts/
-│        ├──build-docker.sh
-│        └── docker-compose-scaled.sh
+│   ├── config/
+│   │    ├── db/
+│   │    └── nginx/
 ├── iac/
 │   └── main.tf
 ├── ARCHITECTURE.md  ## High-level workflows
@@ -45,6 +40,7 @@ The project is organized into the following main directories:
 ```
 
 - `iac/`: Terraform Infrastructure As Code Experiments
+- `config/`: Configuration files for services like `nginx` & `postgres`
 - `api-gateway/`: NestJS API gateway service
 - `transaction-service/`: NestJS service for creating and retrieving transactions
 - `anti-fraud-service/`: NestJS service for transaction validation
