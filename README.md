@@ -28,9 +28,9 @@ The project is organized into the following main directories:
 │   ├── status-update-service
 │   ├── dockerfiles
 │   ├── docker-compose.yml
-│   ├── config/
-│   │    ├── db/
-│   │    └── nginx/
+│   └── config/
+│        ├── db/
+│        └── nginx/
 ├── iac/
 │   └── main.tf
 ├── ARCHITECTURE.md  ## High-level workflows
