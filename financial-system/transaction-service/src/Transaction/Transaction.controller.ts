@@ -30,7 +30,6 @@ export class TransactionController {
   @ApiOperation({ summary: 'Get all transactions' })
   @ApiResponse({ status: 200, description: 'Transactions have been successfully retrieved.' })
   find() {
-    Logger.log('Hello from transaction service');
-    return "Hello from transaction service";
+    return this.transactionService.find()
   }
 }
