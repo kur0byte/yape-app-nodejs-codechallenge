@@ -18,12 +18,12 @@ export class TransactionController {
     return await this.transactionService.create(createTransactionDto);
   }
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Get a transaction by ID' })
+  @Get(':externalId')
+  @ApiOperation({ summary: 'Get a transaction by External ID' })
   @ApiResponse({ status: 200, description: 'The transaction has been successfully retrieved.', type: TransactionDto })
   @ApiResponse({ status: 404, description: 'Transaction not found.' })
-  async findOne(@Param('id') id: string): Promise<Transaction> {
-    return await this.transactionService.findOne(id);
+  async findOne(@Param('externalId') externalId: string): Promise<Transaction> {
+    return await this.transactionService.findOne(externalId);
   }
 
   @Get()
