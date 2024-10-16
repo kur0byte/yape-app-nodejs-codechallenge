@@ -16,7 +16,7 @@ pg_ctl -D "$PGDATA" -m fast -w stop
 rm -rf "$PGDATA"/*
 
 # Create base backup
-PGPASSWORD=$POSTGRES_PASSWORD pg_basebackup -h postgres-primary -D "$PGDATA" -U replicator -P -v -X stream
+PGPASSWORD='replicatorpass' pg_basebackup -h postgres-primary -D "$PGDATA" -U replicator -P -v -X stream
 
 # Create postgresql.auto.conf for PostgreSQL 12+
 cat >> "$PGDATA/postgresql.auto.conf" <<EOL

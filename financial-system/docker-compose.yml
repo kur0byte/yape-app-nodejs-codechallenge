@@ -8,7 +8,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./pg-init-scripts:/docker-entrypoint-initdb.d
+      - ./config/db/primary:/docker-entrypoint-initdb.d
       - postgres_primary_data:/var/lib/postgresql/data
     networks:
       - internal_network
@@ -31,7 +31,7 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - ./replica-init-scripts:/docker-entrypoint-initdb.d
+      - ./config/db/replica:/docker-entrypoint-initdb.d
       - postgres_replica_data:/var/lib/postgresql/data
     networks:
       - internal_network
@@ -95,7 +95,7 @@ services:
   api-gateway-nginx:
     image: nginx:latest
     volumes:
-      - ./nginx/api-gateway.conf:/etc/nginx/nginx.conf:ro
+      - ./config/nginx/api-gateway.conf:/etc/nginx/nginx.conf:ro
     ports:
       - "3000:80"
     depends_on:
@@ -127,7 +127,7 @@ services:
   transaction-service-nginx:
     image: nginx:latest
     volumes:
-      - ./nginx/transaction-service.conf:/etc/nginx/nginx.conf:ro
+      - ./config/nginx/transaction-service.conf:/etc/nginx/nginx.conf:ro
     ports:
       - "3001:80"
     depends_on:
@@ -170,7 +170,7 @@ services:
   anti-fraud-service-nginx:
     image: nginx:latest
     volumes:
-      - ./nginx/anti-fraud-service.conf:/etc/nginx/nginx.conf:ro
+      - ./config/nginx/anti-fraud-service.conf:/etc/nginx/nginx.conf:ro
     ports:
       - "3002:80"
     depends_on:
@@ -193,7 +193,7 @@ services:
   status-update-service-nginx:
     image: nginx:latest
     volumes:
-      - ./nginx/status-update-service.conf:/etc/nginx/nginx.conf:ro
+      - ./config/nginx/status-update-service.conf:/etc/nginx/nginx.conf:ro
     ports:
       - "3003:80"
     depends_on:
